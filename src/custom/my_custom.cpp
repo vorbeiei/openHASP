@@ -42,7 +42,7 @@ void custom_setup()
     analogReadResolution(12);
     last_blink = millis();
 
-    touchSleepWakeUpEnable(T0, 100);
+    touchSleepWakeUpEnable(T0, 66);
 
     pinMode(2, OUTPUT); //disable onboard voltage converter for neopixel connector
     digitalWrite(2, LOW);
