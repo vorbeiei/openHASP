@@ -69,17 +69,17 @@ void custom_loop()
         // Serial.println(batteryFraction);
         last_blink = millis();
         
-        updateBatteryDisplay(12, 9, batteryFraction);
-        updateBatteryDisplay(9, 9, batteryFraction);
-        updateBatteryDisplay(0, 6, batteryFraction);
+        //updateBatteryDisplay(12, 9, batteryFraction);
+        //updateBatteryDisplay(9, 9, batteryFraction);
+        //updateBatteryDisplay(0, 6, batteryFraction);
         //updateVoltageDisplay(9,10,currentVoltage);
         String voltageString = String(currentVoltage, 2);     // Converts the float to a String with 2 decimal places
         voltageString += "V";                                 // Concatenates "V" at the end
-        updateTextDisplay(9, 8, voltageString.c_str());
+        updateTextDisplay(5, 10, voltageString.c_str());
         String fractionString = String(batteryFraction, 2);   // Converts the float to a String with 2 decimal places
         fractionString += "%";                                // Concatenates "%" at the end 
         updateTextDisplay(0, 2, fractionString.c_str());  
-        updateTextDisplay(12, 11, fractionString.c_str());
+        // updateTextDisplay(12, 11, fractionString.c_str());
         uint8_t hasp_sleep_state = hasp_get_sleep_state();
         // Serial.print("SleepState: ");
         // Serial.println(hasp_sleep_state);
