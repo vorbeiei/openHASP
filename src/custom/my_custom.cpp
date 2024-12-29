@@ -16,10 +16,12 @@
 
 unsigned long last_blink = 0;
 const int voltage_read = 35;
-const int blink_speed = 5000; //read every 5 sec
+const int blink_speed = 60000; //read every 60 sec
 
 float batteryFraction;
 float currentVoltage;
+
+float lastBatVal = 0;
 
 //extern lv_obj_t* battery_bar;  // Declare the battery bar variable
 //lv_obj_t* battery_bar;  // Declare the battery bar variable
@@ -80,15 +82,34 @@ void custom_loop()
         fractionString += "%";                                // Concatenates "%" at the end 
         updateTextDisplay(0, 2, fractionString.c_str());  
         // updateTextDisplay(12, 11, fractionString.c_str());
-        uint8_t hasp_sleep_state = hasp_get_sleep_state();
-        // Serial.print("SleepState: ");
-        // Serial.println(hasp_sleep_state);
-        if(hasp_sleep_state == 2) {
-            // Serial.println("Sleep");
-            gpio_hold_en(GPIO_NUM_26);
-            gpio_deep_sleep_hold_en();
-            esp_deep_sleep_start();
+
+
+                // Convert the integer to a string
+        //String vbatFraction = String(batteryFraction);
+        //String vbatLevel = String(currentVoltage);
+
+        // Create the JSON string
+        //String jsonString = "{\"vbat_Fraction\":" + vbatFraction + "}";
+        //String jsonString2 = "{\"vbat_Level\":" + vbatLevel + "}";
+
+        
+
+        // Convert the JSON string to a const char* for your function
+        //const char* jsonChar = jsonString.c_str();
+        //const char* jsonChar2 = jsonString2.c_str();
+
+        // Call your function with the JSON string
+        //dispatch_state_subtopic("vbat_Fraction", jsonChar);
+        //dispatch_state_subtopic("vbat_Level", jsonChar2);  
+        
+        //Battery percentage
+        if (lastBatVal != batteryFraction) {
+            String jsonString4 = "Battery"; //topic
+            const char* jsonChar4 = jsonString4.c_str();
+            dispatch_state_val(jsonChar4, (hasp_event_t) 1, batteryFraction); 
+            lastBatVal = batteryFraction; 
         }
+
     }
 
 
@@ -126,31 +147,17 @@ void custom_every_second()
 
 void custom_every_5seconds()
 {
-    LOG_VERBOSE(TAG_CUSTOM, "%d seconds have passsed...", 5);
+    // LOG_VERBOSE(TAG_CUSTOM, "%d seconds have passsed...", 5);
 
-
-    // Convert the integer to a string
-    String vbatFraction = String(batteryFraction);
-    String vbatLevel = String(currentVoltage);
-
-    // Create the JSON string
-    String jsonString = "{\"vbat_Fraction\":" + vbatFraction + "}";
-    String jsonString2 = "{\"vbat_Level\":" + vbatLevel + "}";
-
-    
-
-    // Convert the JSON string to a const char* for your function
-    const char* jsonChar = jsonString.c_str();
-    const char* jsonChar2 = jsonString2.c_str();
-
-    // Call your function with the JSON string
-    dispatch_state_subtopic("vbat_Fraction", jsonChar);
-    dispatch_state_subtopic("vbat_Level", jsonChar2);  
-    
-    //Battery percentage
-    String jsonString4 = "Battery"; //topic
-    const char* jsonChar4 = jsonString4.c_str();
-    dispatch_state_val(jsonChar4, (hasp_event_t) 1, batteryFraction); 
+    uint8_t hasp_sleep_state = hasp_get_sleep_state();
+        // Serial.print("SleepState: ");
+        // Serial.println(hasp_sleep_state);
+    if(hasp_sleep_state == 2) {
+        // Serial.println("Sleep");
+        gpio_hold_en(GPIO_NUM_26);
+        gpio_deep_sleep_hold_en();
+        esp_deep_sleep_start();
+    }
 
 }
 
