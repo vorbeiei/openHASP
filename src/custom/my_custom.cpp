@@ -80,7 +80,7 @@ void custom_loop()
         updateTextDisplay(5, 10, voltageString.c_str());
         String fractionString = String(batteryFraction, 2);   // Converts the float to a String with 2 decimal places
         fractionString += "%";                                // Concatenates "%" at the end 
-        updateTextDisplay(0, 2, fractionString.c_str());  
+        //updateTextDisplay(0, 2, fractionString.c_str());  
         // updateTextDisplay(12, 11, fractionString.c_str());
 
 
@@ -106,7 +106,7 @@ void custom_loop()
         if (lastBatVal != batteryFraction) {
             String jsonString4 = "Battery"; //topic
             const char* jsonChar4 = jsonString4.c_str();
-            dispatch_state_val(jsonChar4, (hasp_event_t) 1, batteryFraction); 
+            //dispatch_state_val(jsonChar4, (hasp_event_t) 1, batteryFraction); 
             lastBatVal = batteryFraction; 
         }
 
@@ -152,12 +152,12 @@ void custom_every_5seconds()
     uint8_t hasp_sleep_state = hasp_get_sleep_state();
         // Serial.print("SleepState: ");
         // Serial.println(hasp_sleep_state);
-    if(hasp_sleep_state == 2) {
+    //if(hasp_sleep_state == 2) {
         // Serial.println("Sleep");
-        gpio_hold_en(GPIO_NUM_26);
-        gpio_deep_sleep_hold_en();
-        esp_deep_sleep_start();
-    }
+    //    gpio_hold_en(GPIO_NUM_26);
+    //    gpio_deep_sleep_hold_en();
+    //    esp_deep_sleep_start();
+    //}
 
 }
 
