@@ -8,18 +8,22 @@
 #include "hasplib.h"
 //#include <lvgl.h>
 #include "driver/rtc_io.h"
+#include <Adafruit_AHTX0.h>
 
 #if defined(HASP_USE_CUSTOM) && true // <-- set this to true in your code
 
 #include "hasp_debug.h"
 #include "custom/my_custom.h"
 
+Adafruit_AHTX0 aht;
 unsigned long last_blink = 0;
 const int voltage_read = 35;
 const int blink_speed = 60000; //read every 60 sec
 
 float batteryFraction;
 float currentVoltage;
+float AhtTemperature;
+float AhtHumidity; 
 
 float lastBatVal = 0;
 
@@ -40,14 +44,15 @@ const float maxVoltage = 4.2;  // Maximum voltage (100% charge)
 
 void custom_setup()
 {
+    aht.begin();            //0x38
     // Initialization code here
     analogReadResolution(12);
     last_blink = millis();
 
     touchSleepWakeUpEnable(T0, 66);
 
-    pinMode(2, OUTPUT); //disable onboard voltage converter for neopixel connector
-    digitalWrite(2, LOW);
+    // pinMode(2, OUTPUT); //disable onboard voltage converter for neopixel connector
+    // digitalWrite(2, LOW);
 
     gpio_hold_dis(GPIO_NUM_26);
  
@@ -58,59 +63,6 @@ void custom_setup()
 
 void custom_loop()
 {
-    // read voltage every 60 seconds
-    if(blink_speed && (millis() - last_blink > blink_speed)) {
-
-        currentVoltage = analogReadMilliVolts(35);
-        currentVoltage = currentVoltage * 2 / 1000;
-        // Serial.println(currentVoltage);
-        
-        // Calculate the percentage of charge
-        batteryFraction = map(constrain(currentVoltage, minVoltage, maxVoltage)*1000, minVoltage*1000, maxVoltage*1000, 0, 100);
-        //read illumination
-        // Serial.println(batteryFraction);
-        last_blink = millis();
-        
-        //updateBatteryDisplay(12, 9, batteryFraction);
-        //updateBatteryDisplay(9, 9, batteryFraction);
-        //updateBatteryDisplay(0, 6, batteryFraction);
-        //updateVoltageDisplay(9,10,currentVoltage);
-        String voltageString = String(currentVoltage, 2);     // Converts the float to a String with 2 decimal places
-        voltageString += "V";                                 // Concatenates "V" at the end
-        updateTextDisplay(5, 10, voltageString.c_str());
-        String fractionString = String(batteryFraction, 2);   // Converts the float to a String with 2 decimal places
-        fractionString += "%";                                // Concatenates "%" at the end 
-        //updateTextDisplay(0, 2, fractionString.c_str());  
-        // updateTextDisplay(12, 11, fractionString.c_str());
-
-
-                // Convert the integer to a string
-        //String vbatFraction = String(batteryFraction);
-        //String vbatLevel = String(currentVoltage);
-
-        // Create the JSON string
-        //String jsonString = "{\"vbat_Fraction\":" + vbatFraction + "}";
-        //String jsonString2 = "{\"vbat_Level\":" + vbatLevel + "}";
-
-        
-
-        // Convert the JSON string to a const char* for your function
-        //const char* jsonChar = jsonString.c_str();
-        //const char* jsonChar2 = jsonString2.c_str();
-
-        // Call your function with the JSON string
-        //dispatch_state_subtopic("vbat_Fraction", jsonChar);
-        //dispatch_state_subtopic("vbat_Level", jsonChar2);  
-        
-        //Battery percentage
-        if (lastBatVal != batteryFraction) {
-            String jsonString4 = "Battery"; //topic
-            const char* jsonChar4 = jsonString4.c_str();
-            //dispatch_state_val(jsonChar4, (hasp_event_t) 1, batteryFraction); 
-            lastBatVal = batteryFraction; 
-        }
-
-    }
 
 
 }
@@ -148,37 +100,49 @@ void custom_every_second()
 void custom_every_5seconds()
 {
     // LOG_VERBOSE(TAG_CUSTOM, "%d seconds have passsed...", 5);
+    sensors_event_t humidity, temp;
+    aht.getEvent(&humidity, &temp);
+    AhtTemperature = temp.temperature;
+    AhtHumidity = humidity.relative_humidity;
 
-    uint8_t hasp_sleep_state = hasp_get_sleep_state();
-        // Serial.print("SleepState: ");
-        // Serial.println(hasp_sleep_state);
-    //if(hasp_sleep_state == 2) {
-        // Serial.println("Sleep");
-    //    gpio_hold_en(GPIO_NUM_26);
-    //    gpio_deep_sleep_hold_en();
-    //    esp_deep_sleep_start();
-    //}
+    //Convert the integer to a string
+    String TempFraction = String(temp.temperature, 2);
+    String HumLevel = String(humidity.relative_humidity,2);
+
+    // Create the JSON string
+    String jsonString = "{\"Temperature\":" + TempFraction + "}";
+    String jsonString2 = "{\"Humidity\":" + HumLevel + "}";
+
+    
+
+    // Convert the JSON string to a const char* for your function
+    const char* jsonChar = jsonString.c_str();
+    const char* jsonChar2 = jsonString2.c_str();
+
+    // Call your function with the JSON string
+    dispatch_state_subtopic("Temperature", jsonChar);
+    dispatch_state_subtopic("Humidity", jsonChar2);  
+
+    String TempStr = String(temp.temperature, 1) + "°C";
+    String HumStr = String(int(humidity.relative_humidity)) + "%";
+
+    updateTextDisplay(0, 2, TempStr.c_str());
+    updateTextDisplay(0, 6, HumStr.c_str());
+
+
+    String jsonString5 = "Humidity"; //topic
+    const char* jsonChar5 = jsonString5.c_str();
+    dispatch_state_val(jsonChar5, (hasp_event_t) 1, AhtHumidity);
 
 }
 
 bool custom_pin_in_use(uint8_t pin)
 {
-    /*
-    switch(pin) {
-        case illum_read:  // Custom LED pin
-        case 6:  // Custom Input pin
-            return true;
-        default:
-            return false;
-    }
-    */
    return false;
 }
 
 void custom_get_sensors(JsonDocument& doc)
 {
-    JsonObject sensor = doc.createNestedObject(F("Battery"));  // Add Key
-    sensor[F("Battery")] = batteryFraction;                        // Set Value
 
 }
 
